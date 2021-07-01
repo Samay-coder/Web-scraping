@@ -1,37 +1,33 @@
-from selenium import webdriver
-# selenium is used to interact with webpages (like automation testing)
 from bs4 import BeautifulSoup
 # BeautifulSoup is used for parsing text as html
-import time,csv
+import time,csv,requests,pandas
 
 url = 'https://en.wikipedia.org/wiki/List_of_brightest_stars_and_other_record_stars'
-browser = webdriver.Chrome('/Users/samay/Desktop/SAMAY THE AWESOME IV ONLINE LEARNING TAKES OVER THE WORLD/Coding/Whitehat jr./PYTHON/programs/Virtual environment programs/venv/chromedriver.exe')
-browser.get(url)
+page = requests.get(url)
 
-time.sleep(10)
+Soup = BeautifulSoup(page.text,"html.parser") 
+table = Soup.find('table')
+temp = []
+rows = table.find_all('tr')
 
-def Scrape():
-    headers = ['NAME','DISTANCE', 'MASS', 'RADIUS']
-    starData = []
-    Soup = BeautifulSoup(browser.page_source,"html.parser")
-    for tag in Soup.find_all('th',attrs={'class','headerSort'}):
-        litags = tag.find_all('tr')
-        tempList = []
-        for index,tag in enumerate(litags):
-            if index==0:
-                tempList.append(tag.find_all('a')[0].contents[0])
-            else:
-                try:
-                    tempList.append(tag.contents[0])
-                except:
-                    tempList.append('')
-        starData.append(tempList)
+for tr in rows:
+    td = tr.find_all('td')
+    row = [i.text.rstrip() for i in td]
+    temp.append(row)
 
+names = []
+d = []
+m = []
+r = []
+l = []
 
+for i in range(1,len(temp)):
+    names.append(temp[i][1])
+    d.append(temp[i][3])
+    m.append(temp[i][5])
+    r.append(temp[i][6])
+    l.append(temp[i][7])
 
-    with open('ScrapeData.csv','w') as f:
-        cw = csv.writer(f)
-        cw.writerow(headers)
-        cw.writerows(starData)
-
+df = pandas.DataFrame(list(zip(names,d,m,r,l)),columns = ['starname','distance','mass','radius','luminosity'])
+df.to_csv("ScrapeData.csv")
 Scrape()
